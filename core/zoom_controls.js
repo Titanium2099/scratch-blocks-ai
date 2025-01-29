@@ -61,6 +61,14 @@ Blockly.ZoomControls.prototype.ZOOM_OUT_PATH_ = 'zoom-out.svg';
 Blockly.ZoomControls.prototype.ZOOM_RESET_PATH_ = 'zoom-reset.svg';
 
 /**
+ * AI button icon path.
+ * @type {string}
+ * @private
+ */
+Blockly.ZoomControls.prototype.ZOOM_AI_BUTTON_PATH_ = 'ai-button.svg';  // Use your icon here
+
+
+/**
  * Width of the zoom controls.
  * @type {number}
  * @private
@@ -126,6 +134,7 @@ Blockly.ZoomControls.prototype.createDom = function() {
   this.createZoomOutSvg_();
   this.createZoomInSvg_();
   this.createZoomResetSvg_();
+  this.createAISvg_();
   return this.svgGroup_;
 };
 
@@ -299,3 +308,46 @@ Blockly.ZoomControls.prototype.createZoomResetSvg_ = function() {
     e.preventDefault();  // Stop double-clicking from selecting text.
   });
 };
+
+
+/**
+ * Create the AI button icon and its event handler.
+ * The Scratch Blocks implementation of this function is different from the
+ * Blockly implementation.
+ * @private
+ */
+Blockly.ZoomControls.prototype.createAISvg_ = function() {
+  /* This markup will be generated and added to the "blocklyZoom" group:
+    <image width="36" height="36" y="88" xlink:href="../media/ai-button.svg">
+    </image>
+  */
+  var ws = this.workspace_;
+
+  /**
+   * AI button control.
+   * @type {SVGElement}
+   */
+  var aiSvg = Blockly.utils.createSvgElement(
+      'image',
+      {
+        'width': this.WIDTH_,
+        'height': this.WIDTH_,
+        'y': (this.WIDTH_ * -1) + (this.MARGIN_BETWEEN_ * -1)
+      },
+      this.svgGroup_
+  );
+  aiSvg.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href',
+      ws.options.pathToMedia + this.ZOOM_AI_BUTTON_PATH_);
+
+  // Attach event listeners.
+  Blockly.bindEventWithChecks_(aiSvg, 'mousedown', null, function(e) {
+    ws.markFocused();
+    console.log("DEBUG: AI button clicked");
+    //broadcast window event "ai-button-clicked"
+    var event = new Event('ai-button-clicked');
+    window.dispatchEvent(event);
+    Blockly.Touch.clearTouchIdentifier();  // Don't block future drags.
+    e.stopPropagation();  // Don't start a workspace scroll.
+    e.preventDefault();  // Stop double-clicking from selecting text.
+  });
+}
