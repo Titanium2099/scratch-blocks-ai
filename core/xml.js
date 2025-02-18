@@ -567,7 +567,7 @@ Blockly.Xml.appendDomToWorkspace = function(xml, workspace) {
  * @param {!Blockly.Workspace} workspace The workspace.
  * @return {!Blockly.Block} The root block created.
  */
-Blockly.Xml.domToBlock = function(xmlBlock, workspace) {
+Blockly.Xml.domToBlock = function(xmlBlock, workspace, uniqueCommentID="unapplicable") {
   if (xmlBlock instanceof Blockly.Workspace) {
     var swap = xmlBlock;
     xmlBlock = workspace;
@@ -579,7 +579,7 @@ Blockly.Xml.domToBlock = function(xmlBlock, workspace) {
   Blockly.Events.disable();
   var variablesBeforeCreation = workspace.getAllVariables();
   try {
-    var topBlock = Blockly.Xml.domToBlockHeadless_(xmlBlock, workspace);
+    var topBlock = Blockly.Xml.domToBlockHeadless_(xmlBlock, workspace,uniqueCommentID);
     // Generate list of all blocks.
     var blocks = topBlock.getDescendants(false);
     if (workspace.rendered) {
@@ -657,7 +657,7 @@ Blockly.Xml.domToVariables = function(xmlVariables, workspace) {
  * @return {!Blockly.Block} The root block created.
  * @private
  */
-Blockly.Xml.domToBlockHeadless_ = function(xmlBlock, workspace) {
+Blockly.Xml.domToBlockHeadless_ = function(xmlBlock, workspace,uniqueCommentID="unapplicable") {
   var block = null;
   var prototypeName = xmlBlock.getAttribute('type');
   goog.asserts.assert(
@@ -741,7 +741,7 @@ Blockly.Xml.domToBlockHeadless_ = function(xmlBlock, workspace) {
         // Titles were renamed to field in December 2013.
         // Fall through.
       case 'field':
-        Blockly.Xml.domToField_(block, name, xmlChild);
+        Blockly.Xml.domToField_(block, name, xmlChild,uniqueCommentID);
         break;
       case 'value':
       case 'statement':
@@ -749,7 +749,7 @@ Blockly.Xml.domToBlockHeadless_ = function(xmlBlock, workspace) {
         if (!input) {
           console.warn('Ignoring non-existent input ' + name + ' in block ' +
                        prototypeName);
-          window.dispatchEvent(new CustomEvent('blockError', {detail: {block: block, source: "1", error: 'Ignoring non-existent input ' + name + ' in block ' + prototypeName}}));
+          window.dispatchEvent(new CustomEvent('blockError', {detail: {uniqueCommentID:uniqueCommentID, block: block, source: "1", error: 'Ignoring non-existent input ' + name + ' in block ' + prototypeName}}));
           break;
         }
         if (childShadowElement) {
@@ -757,7 +757,7 @@ Blockly.Xml.domToBlockHeadless_ = function(xmlBlock, workspace) {
         }
         if (childBlockElement) {
           blockChild = Blockly.Xml.domToBlockHeadless_(childBlockElement,
-              workspace);
+              workspace,uniqueCommentID);
           if (blockChild.outputConnection) {
             input.connection.connect(blockChild.outputConnection);
           } else if (blockChild.previousConnection) {
@@ -779,7 +779,7 @@ Blockly.Xml.domToBlockHeadless_ = function(xmlBlock, workspace) {
           goog.asserts.assert(!block.nextConnection.isConnected(),
               'Next statement is already connected.');
           blockChild = Blockly.Xml.domToBlockHeadless_(childBlockElement,
-              workspace);
+              workspace,uniqueCommentID);
           goog.asserts.assert(blockChild.previousConnection,
               'Next block does not have previous statement.');
           block.nextConnection.connect(blockChild.previousConnection);
@@ -875,12 +875,12 @@ Blockly.Xml.domToFieldVariable_ = function(workspace, xml, text, field) {
  * @param {!Element} xml The field tag to decode.
  * @private
  */
-Blockly.Xml.domToField_ = function(block, fieldName, xml) {
+Blockly.Xml.domToField_ = function(block, fieldName, xml,uniqueCommentID="unapplicable") {
   var field = block.getField(fieldName);
   if (!field) {
     console.warn('Ignoring non-existent field ' + fieldName + ' in block ' +
                  block.type);
-    window.dispatchEvent(new CustomEvent('blockError', {detail: {block: block, source: "2", error: 'Ignoring non-existent field ' + fieldName + ' in block ' + block.type}}));
+    window.dispatchEvent(new CustomEvent('blockError', {detail: {block: block,uniqueCommentID:uniqueCommentID, source: "2", error: 'Ignoring non-existent field ' + fieldName + ' in block ' + block.type}}));
     return;
   }
 
